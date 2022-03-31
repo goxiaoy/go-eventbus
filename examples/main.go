@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/goxiaoy/eventbus"
+	eventbus "github.com/goxiaoy/go-eventbus"
 )
 
 type TestEvent1 struct {
@@ -77,23 +77,23 @@ func main() {
 	}
 	dispose.Dispose(ctx)
 
-	//Any Processor
-	dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
-		return &TestResult1{}, err
-	})
-
-	resultAny, err := eventbus.Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
-	if err != nil {
-		panic(err)
-	}
-	if resultAny == nil {
-		panic("no result")
-	}
-	result, ok := resultAny.(*TestResult1)
-	if !ok {
-		panic("result not match")
-	}
-	if result == nil {
-		panic("no result")
-	}
+	////Any Processor
+	//dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
+	//	return &TestResult1{}, err
+	//})
+	//
+	//resultAny, err := eventbus.Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
+	//if err != nil {
+	//	panic(err)
+	//}
+	//if resultAny == nil {
+	//	panic("no result")
+	//}
+	//result, ok := resultAny.(*TestResult1)
+	//if !ok {
+	//	panic("result not match")
+	//}
+	//if result == nil {
+	//	panic("no result")
+	//}
 }

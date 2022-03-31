@@ -1,6 +1,10 @@
 # go-eventbus
-simple strong typed event bus from golang generics
+simple strong typed event bus from golang generics.
+
 you can use it as a local eventbus or a mediator for [CQRS](https://en.wikipedia.org/wiki/Command%E2%80%93query_separation)
+
+- [x] Publish, Subscribe/SubscribeOnce/Subscribe (with type assertion)
+- [x] Dispatch, AddProcessor
 
 ## Install
 ```
@@ -74,20 +78,9 @@ if err != nil {
     panic(err)
 }
 ```
-Any Processor
-```go
-//Any Processor
-dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
-    return &TestResult1{}, err
-})
-
-resultAny, err := eventbus.Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
-if err != nil {
-    panic(err)
-}
-```
 
 ## Limitation
 
-This eventbus is designed as `O(n)` complexity.
+- This eventbus is designed as `O(n)` complexity.
+- Do not support Dispatch/Process Result implicit type  
 

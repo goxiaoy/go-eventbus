@@ -171,6 +171,10 @@ func Dispatch[TEvent any, TResult any](e *EventBus) DispatcherFunc[TEvent, TResu
 		if err != nil {
 			return r, err
 		}
+		switch result.(type) {
+		case nil:
+			return r, nil
+		}
 		return result.(TResult), err
 	}
 }
@@ -217,16 +221,8 @@ func AddProcessor[TEvent any, TResult any](e *EventBus) ProcessableFunc[TEvent, 
 				if !ok {
 					return false
 				}
-				//check TResult interface{}
-				if result == nil {
-					return true
-				}
-
 				_, ok = result.(TResult)
-				if !ok {
-					return false
-				}
-				return true
+				return ok
 			},
 			processFunc: wrapper,
 		})
