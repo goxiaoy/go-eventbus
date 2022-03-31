@@ -1,4 +1,4 @@
-module github.com/goxiaoy/eventbus
+module github.com/goxiaoy/go-eventbus
 
 go 1.18
 
