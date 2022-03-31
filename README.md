@@ -44,47 +44,47 @@ func main() {
 ```
 Subscribe to any
 
-```
-    //You can also subscribe to any
-    dispose, err = eventbus.Subscribe[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
-        fmt.Println("do any")
-        return nil
-    })
+```go
+//You can also subscribe to any
+dispose, err = eventbus.Subscribe[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
+    fmt.Println("do any")
+    return nil
+})
 ```
 
 Subscribe once
-```
-    dispose, err = eventbus.SubscribeOnce[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
-        fmt.Println("do any")
-        return nil
-    })
+```go
+dispose, err = eventbus.SubscribeOnce[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
+    fmt.Println("do any")
+    return nil
+})
 ```
 
 ### Dispatch and Process
 
 ```go
-	//Processor
-	dispose, err = eventbus.AddProcessor[*TestEvent1, *TestResult1](bus)(ctx, func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
-		fmt.Println("return result")
-		return &TestResult1{}, err
-	})
-	//Dispatch
-	result, err := eventbus.Dispatch[*TestEvent1, *TestResult1](bus)(ctx, &TestEvent1{})
-	if err != nil {
-		panic(err)
-	}
+//Processor
+dispose, err = eventbus.AddProcessor[*TestEvent1, *TestResult1](bus)(ctx, func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
+    fmt.Println("return result")
+    return &TestResult1{}, err
+})
+//Dispatch
+result, err := eventbus.Dispatch[*TestEvent1, *TestResult1](bus)(ctx, &TestEvent1{})
+if err != nil {
+    panic(err)
+}
 ```
 Any Processor
 ```go
-	//Any Processor
-	dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
-		return &TestResult1{}, err
-	})
+//Any Processor
+dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
+    return &TestResult1{}, err
+})
 
-	resultAny, err := eventbus.Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
-	if err != nil {
-		panic(err)
-	}
+resultAny, err := eventbus.Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
+if err != nil {
+    panic(err)
+}
 ```
 
 ## Limitation
