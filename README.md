@@ -13,7 +13,7 @@ go get github.com/goxiaoy/go-eventbus
 
 ## Usage
 
-### create a eventbus
+### create a eventbus or skip to use Default one
 ```go
 bus := eventbus.New()
 ```
@@ -82,5 +82,5 @@ if err != nil {
 ## Limitation
 
 - This eventbus is designed as `O(n)` complexity.
-- Do not support Dispatch/Process Result implicit type  
+- Do not support Dispatch/Process Result interface type  
 

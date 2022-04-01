@@ -27,11 +27,11 @@ type PublisherFunc[TEvent any] func(ctx context.Context, event TEvent) error
 
 type DispatcherFunc[TEvent any, TResult any] func(ctx context.Context, event TEvent) (TResult, error)
 
-type SubscribeFunc[TEvent any] func(ctx context.Context, handler Handler[TEvent]) (IDisposable, error)
+type SubscribeFunc[TEvent any] func(handler Handler[TEvent]) (IDisposable, error)
 
-type SubscribeOnceFunc[TEvent any] func(ctx context.Context, handler Handler[TEvent]) (IDisposable, error)
+type SubscribeOnceFunc[TEvent any] func(handler Handler[TEvent]) (IDisposable, error)
 
-type ProcessableFunc[TEvent any, TResult any] func(ctx context.Context, processor Processor[TEvent, TResult]) (IDisposable, error)
+type ProcessableFunc[TEvent any, TResult any] func(processor Processor[TEvent, TResult]) (IDisposable, error)
 
 type handler interface {
 	CanHandle(ctx context.Context, event interface{}) bool
@@ -80,6 +80,10 @@ func New() *EventBus {
 	return &EventBus{}
 }
 
+var (
+	Default = New()
+)
+
 func (e *EventBus) publish(ctx context.Context, event interface{}) error {
 	e.handleLock.Lock()
 	defer e.handleLock.Unlock()
@@ -106,7 +110,7 @@ func (e *EventBus) dispatch(ctx context.Context, event interface{}, result inter
 	return nil, ErrNotProcessor
 }
 
-func (e *EventBus) subscribe(ctx context.Context, h handler) (IDisposable, error) {
+func (e *EventBus) subscribe(h handler) (IDisposable, error) {
 	e.handleLock.Lock()
 	defer e.handleLock.Unlock()
 	e.handlers = append(e.handlers, h)
@@ -118,7 +122,7 @@ func (e *EventBus) subscribe(ctx context.Context, h handler) (IDisposable, error
 	}), nil
 }
 
-func (e *EventBus) subscriberOnce(ctx context.Context, h handler) (IDisposable, error) {
+func (e *EventBus) subscriberOnce(h handler) (IDisposable, error) {
 	e.handleLock.Lock()
 	defer e.handleLock.Unlock()
 
@@ -145,7 +149,7 @@ func (e *EventBus) subscriberOnce(ctx context.Context, h handler) (IDisposable, 
 	return dispose, nil
 }
 
-func (e *EventBus) addProcessor(ctx context.Context, p processor) (IDisposable, error) {
+func (e *EventBus) addProcessor(p processor) (IDisposable, error) {
 	e.dispatchLock.Lock()
 	defer e.dispatchLock.Unlock()
 	e.processors = append(e.processors, p)
@@ -157,14 +161,16 @@ func (e *EventBus) addProcessor(ctx context.Context, p processor) (IDisposable, 
 	}), nil
 }
 
-func Publish[TEvent any](e *EventBus) PublisherFunc[TEvent] {
+func Publish[TEvent any](es ...*EventBus) PublisherFunc[TEvent] {
+	e := resolveEventbus(es...)
 	return func(ctx context.Context, event TEvent) error {
 		return e.publish(ctx, event)
 	}
 }
 
 //Dispatch return processed result, ErrNotProcessor returned if no matching processor
-func Dispatch[TEvent any, TResult any](e *EventBus) DispatcherFunc[TEvent, TResult] {
+func Dispatch[TEvent any, TResult any](es ...*EventBus) DispatcherFunc[TEvent, TResult] {
+	e := resolveEventbus(es...)
 	return func(ctx context.Context, event TEvent) (TResult, error) {
 		var r TResult
 		result, err := e.dispatch(ctx, event, r)
@@ -179,12 +185,13 @@ func Dispatch[TEvent any, TResult any](e *EventBus) DispatcherFunc[TEvent, TResu
 	}
 }
 
-func Subscribe[TEvent any](e *EventBus) SubscribeFunc[TEvent] {
-	return func(ctx context.Context, handler Handler[TEvent]) (IDisposable, error) {
+func Subscribe[TEvent any](es ...*EventBus) SubscribeFunc[TEvent] {
+	e := resolveEventbus(es...)
+	return func(handler Handler[TEvent]) (IDisposable, error) {
 		wrapper := func(ctx context.Context, event interface{}) error {
 			return handler(ctx, event.(TEvent))
 		}
-		return e.subscribe(ctx, &handlerImpl{
+		return e.subscribe(&handlerImpl{
 			canHandlerFunc: func(ctx context.Context, event interface{}) bool {
 				_, ok := event.(TEvent)
 				return ok
@@ -194,12 +201,13 @@ func Subscribe[TEvent any](e *EventBus) SubscribeFunc[TEvent] {
 	}
 }
 
-func SubscribeOnce[TEvent any](e *EventBus) SubscribeOnceFunc[TEvent] {
-	return func(ctx context.Context, handler Handler[TEvent]) (IDisposable, error) {
+func SubscribeOnce[TEvent any](es ...*EventBus) SubscribeOnceFunc[TEvent] {
+	e := resolveEventbus(es...)
+	return func(handler Handler[TEvent]) (IDisposable, error) {
 		wrapper := func(ctx context.Context, event interface{}) error {
 			return handler(ctx, event.(TEvent))
 		}
-		return e.subscriberOnce(ctx, &handlerImpl{
+		return e.subscriberOnce(&handlerImpl{
 			canHandlerFunc: func(ctx context.Context, event interface{}) bool {
 				_, ok := event.(TEvent)
 				return ok
@@ -209,13 +217,15 @@ func SubscribeOnce[TEvent any](e *EventBus) SubscribeOnceFunc[TEvent] {
 	}
 }
 
-func AddProcessor[TEvent any, TResult any](e *EventBus) ProcessableFunc[TEvent, TResult] {
-	return func(ctx context.Context, processor Processor[TEvent, TResult]) (IDisposable, error) {
+func AddProcessor[TEvent any, TResult any](es ...*EventBus) ProcessableFunc[TEvent, TResult] {
+	e := resolveEventbus(es...)
+	return func(processor Processor[TEvent, TResult]) (IDisposable, error) {
 		wrapper := func(ctx context.Context, event interface{}) (interface{}, error) {
 			result, err := processor(ctx, event.(TEvent))
 			return result, err
 		}
-		return e.addProcessor(ctx, &processorImpl{
+
+		return e.addProcessor(&processorImpl{
 			canProcessFunc: func(ctx context.Context, event interface{}, result interface{}) bool {
 				_, ok := event.(TEvent)
 				if !ok {
@@ -226,6 +236,14 @@ func AddProcessor[TEvent any, TResult any](e *EventBus) ProcessableFunc[TEvent, 
 			},
 			processFunc: wrapper,
 		})
+	}
+}
+
+func resolveEventbus(es ...*EventBus) *EventBus {
+	if len(es) > 0 {
+		return es[0]
+	} else {
+		return Default
 	}
 }
 

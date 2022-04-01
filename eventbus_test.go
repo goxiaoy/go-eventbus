@@ -23,7 +23,12 @@ type TestInterface interface {
 }
 
 func TestPublishAndSubscribe(t *testing.T) {
-	bus := New()
+	testPublishAndSubscribe(Default, t)
+	testPublishAndSubscribe(New(), t)
+}
+
+func testPublishAndSubscribe(bus *EventBus, t *testing.T) {
+
 	ctx := context.Background()
 
 	event1 := &TestEvent1{}
@@ -31,7 +36,7 @@ func TestPublishAndSubscribe(t *testing.T) {
 	event2_1 := &TestEvent2{}
 
 	counter1 := 0
-	dispose1, err := Subscribe[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
+	dispose1, err := Subscribe[interface{}](bus)(func(ctx context.Context, event interface{}) error {
 
 		if counter1 == 0 {
 			assert.Equal(t, event1, event)
@@ -49,7 +54,7 @@ func TestPublishAndSubscribe(t *testing.T) {
 	assert.NoError(t, err)
 
 	counter1_2 := 0
-	_, err = Subscribe[*TestEvent1](bus)(ctx, func(ctx context.Context, event *TestEvent1) error {
+	_, err = Subscribe[*TestEvent1](bus)(func(ctx context.Context, event *TestEvent1) error {
 		if counter1_2 == 0 {
 			assert.Equal(t, event1, event)
 		}
@@ -62,7 +67,7 @@ func TestPublishAndSubscribe(t *testing.T) {
 	assert.NoError(t, err)
 
 	counter2_1 := 0
-	_, err = Subscribe[*TestEvent2](bus)(ctx, func(ctx context.Context, event *TestEvent2) error {
+	_, err = Subscribe[*TestEvent2](bus)(func(ctx context.Context, event *TestEvent2) error {
 		assert.Equal(t, event2_1, event)
 		counter2_1++
 		return nil
@@ -90,20 +95,24 @@ func TestPublishAndSubscribe(t *testing.T) {
 }
 
 func TestDispatchAndProcess(t *testing.T) {
-	bus := New()
+	testDispatchAndProcess(Default, t)
+	testDispatchAndProcess(New(), t)
+}
+
+func testDispatchAndProcess(bus *EventBus, t *testing.T) {
 	ctx := context.Background()
 	event1 := &TestEvent1{}
 
 	result := &TestResult1{}
 
 	counter := 0
-	dispose1, err := AddProcessor[*TestEvent1, *TestResult1](bus)(ctx, func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
+	dispose1, err := AddProcessor[*TestEvent1, *TestResult1](bus)(func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
 		counter++
 		return result, nil
 	})
 	assert.NoError(t, err)
 
-	dispose2, err := AddProcessor[*TestEvent1, *TestResult2](bus)(ctx, func(ctx context.Context, event *TestEvent1) (*TestResult2, error) {
+	dispose2, err := AddProcessor[*TestEvent1, *TestResult2](bus)(func(ctx context.Context, event *TestEvent1) (*TestResult2, error) {
 		counter++
 		return &TestResult2{}, nil
 	})
