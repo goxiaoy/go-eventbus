@@ -14,13 +14,13 @@ type Handler[TEvent any] func(ctx context.Context, event TEvent) error
 type Processor[TEvent any, TResult any] func(ctx context.Context, event TEvent) (TResult, error)
 
 type IDisposable interface {
-	Dispose(ctx context.Context) error
+	Dispose() error
 }
 
-type DisposeFunc func(ctx context.Context) error
+type DisposeFunc func() error
 
-func (d DisposeFunc) Dispose(ctx context.Context) error {
-	return d(ctx)
+func (d DisposeFunc) Dispose() error {
+	return d()
 }
 
 type PublisherFunc[TEvent any] func(ctx context.Context, event TEvent) error
@@ -114,7 +114,7 @@ func (e *EventBus) subscribe(h handler) (IDisposable, error) {
 	e.handleLock.Lock()
 	defer e.handleLock.Unlock()
 	e.handlers = append(e.handlers, h)
-	return DisposeFunc(func(ctx context.Context) error {
+	return DisposeFunc(func() error {
 		e.handleLock.Lock()
 		defer e.handleLock.Unlock()
 		e.handlers = removeHandler(e.handlers, h)
@@ -130,7 +130,7 @@ func (e *EventBus) subscriberOnce(h handler) (IDisposable, error) {
 		canHandlerFunc: h.CanHandle,
 	}
 
-	dispose := DisposeFunc(func(ctx context.Context) error {
+	dispose := DisposeFunc(func() error {
 		//do not need to lock due to locked by publish
 		e.handlers = removeHandler(e.handlers, handler(wrapper))
 		return nil
@@ -141,7 +141,7 @@ func (e *EventBus) subscriberOnce(h handler) (IDisposable, error) {
 		if err != nil {
 			return err
 		}
-		return dispose(ctx)
+		return dispose()
 	}
 
 	e.handlers = append(e.handlers, wrapper)
@@ -153,7 +153,7 @@ func (e *EventBus) addProcessor(p processor) (IDisposable, error) {
 	e.dispatchLock.Lock()
 	defer e.dispatchLock.Unlock()
 	e.processors = append(e.processors, p)
-	return DisposeFunc(func(ctx context.Context) error {
+	return DisposeFunc(func() error {
 		e.dispatchLock.Lock()
 		defer e.dispatchLock.Unlock()
 		e.processors = removeProcessor(e.processors, p)

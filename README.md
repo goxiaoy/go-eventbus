@@ -39,7 +39,7 @@ func main() {
         panic(err)
     }
     //UnSubscribe
-    err = dispose.Dispose(ctx)
+    err = dispose.Dispose()
     if err != nil {
         panic(err)
     }

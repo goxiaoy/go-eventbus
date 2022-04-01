@@ -29,7 +29,7 @@ func main() {
 		panic(err)
 	}
 	//UnSubscribe
-	err = dispose.Dispose(ctx)
+	err = dispose.Dispose()
 	if err != nil {
 		panic(err)
 	}
@@ -75,7 +75,7 @@ func main() {
 	if result == nil {
 		panic("no result")
 	}
-	dispose.Dispose(ctx)
+	dispose.Dispose()
 
 	////Any Processor
 	//dispose, err = eventbus.AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {

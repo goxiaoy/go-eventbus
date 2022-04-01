@@ -87,7 +87,7 @@ func testPublishAndSubscribe(bus *EventBus, t *testing.T) {
 	assert.Equal(t, counter2_1, 1)
 
 	//publish after dispose
-	err = dispose1.Dispose(ctx)
+	err = dispose1.Dispose()
 	assert.NoError(t, err)
 	err = Publish[*TestEvent1](bus)(ctx, event1)
 	assert.NoError(t, err)
@@ -124,7 +124,7 @@ func testDispatchAndProcess(bus *EventBus, t *testing.T) {
 
 	assert.Equal(t, 1, counter)
 
-	err = dispose1.Dispose(ctx)
+	err = dispose1.Dispose()
 	assert.NoError(t, err)
 	result1, err = Dispatch[*TestEvent1, *TestResult1](bus)(ctx, event1)
 	assert.Error(t, ErrNotProcessor, err)
@@ -136,7 +136,7 @@ func testDispatchAndProcess(bus *EventBus, t *testing.T) {
 	assert.NotNil(t, result2)
 	assert.Equal(t, 2, counter)
 
-	dispose2.Dispose(ctx)
+	dispose2.Dispose()
 
 	//Any Processor
 	//dispose3, err := AddProcessor[interface{}, interface{}](bus)(ctx, func(ctx context.Context, event interface{}) (interface{}, error) {
@@ -147,7 +147,7 @@ func testDispatchAndProcess(bus *EventBus, t *testing.T) {
 	//resultAny, err = Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
 	//assert.NoError(t, err)
 	//assert.NotNil(t, resultAny)
-	//dispose3.Dispose(ctx)
+	//dispose3.Dispose()
 	//
 	//resultAny, err = Dispatch[*TestEvent1, interface{}](bus)(ctx, &TestEvent1{})
 	//assert.ErrorIs(t, err, ErrNotProcessor)
@@ -162,6 +162,6 @@ func testDispatchAndProcess(bus *EventBus, t *testing.T) {
 	//result3, err := Dispatch[*TestEvent1, TestInterface](bus)(ctx, &TestEvent1{})
 	//assert.ErrorIs(t, err, bizErr)
 	//assert.Nil(t, result3)
-	//dispose.Dispose(ctx)
+	//dispose.Dispose()
 
 }
