@@ -26,7 +26,7 @@ type TestEvent1 struct {
 func main() {
     ctx := context.Background()
     //Subscribe
-    dispose, err := eventbus.Subscribe[*TestEvent1](bus)(ctx, func(ctx context.Context, event *TestEvent1) error {
+    dispose, err := eventbus.Subscribe[*TestEvent1](bus)(func(ctx context.Context, event *TestEvent1) error {
         fmt.Print("do TestEvent1")
         return nil
     })
@@ -50,7 +50,7 @@ Subscribe to any
 
 ```go
 //You can also subscribe to any
-dispose, err = eventbus.Subscribe[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
+dispose, err = eventbus.Subscribe[interface{}](bus)(func(ctx context.Context, event interface{}) error {
     fmt.Println("do any")
     return nil
 })
@@ -58,7 +58,7 @@ dispose, err = eventbus.Subscribe[interface{}](bus)(ctx, func(ctx context.Contex
 
 Subscribe once
 ```go
-dispose, err = eventbus.SubscribeOnce[interface{}](bus)(ctx, func(ctx context.Context, event interface{}) error {
+dispose, err = eventbus.SubscribeOnce[interface{}](bus)(func(ctx context.Context, event interface{}) error {
     fmt.Println("do any")
     return nil
 })
@@ -68,7 +68,7 @@ dispose, err = eventbus.SubscribeOnce[interface{}](bus)(ctx, func(ctx context.Co
 
 ```go
 //Processor
-dispose, err = eventbus.AddProcessor[*TestEvent1, *TestResult1](bus)(ctx, func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
+dispose, err = eventbus.AddProcessor[*TestEvent1, *TestResult1](bus)(func(ctx context.Context, event *TestEvent1) (*TestResult1, error) {
     fmt.Println("return result")
     return &TestResult1{}, err
 })
